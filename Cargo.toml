@@ -12,6 +12,10 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Howler Contributors"]
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/realgoldfang/Howler"
+readme = "README.md"
+keywords = ["wolf", "tracking", "wildlife", "gis", "conservation"]
+categories = ["science", "visualization"]
 
 [workspace.dependencies]
 reqwest = { version = "0.12", features = ["json"] }

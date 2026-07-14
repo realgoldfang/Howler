@@ -1,19 +1,36 @@
 [package]
 name = "howler-cli"
+description = "Command-line interface for the Howler wolf-tracking platform"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [[bin]]
 name = "howler"
 path = "src/main.rs"
 
 [dependencies]
-howler-core = { path = "../howler-core" }
-howler-tui = { path = "../howler-tui" }
-howler-gui = { path = "../howler-gui" }
+howler-core = { version = "0.1.0", path = "../howler-core" }
+howler-tui = { version = "0.1.0", path = "../howler-tui" }
+howler-gui = { version = "0.1.0", path = "../howler-gui" }
 clap = { version = "4.5", features = ["derive"] }
 tokio = { workspace = true }
 anyhow = { workspace = true }
 shellexpand = "3.1"
+
+[package.metadata.deb]
+name = "howler"
+maintainer = "Howler Contributors"
+copyright = "2024, Howler Contributors"
+extended-description = "Wolf tracking and wildlife observation platform with ML-powered analytics"
+section = "science"
+priority = "optional"
+assets = [
+    ["target/release/howler", "usr/bin/howler", "755"],
+]
+depends = "libgcc-s1"

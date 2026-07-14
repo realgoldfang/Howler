@@ -1,9 +1,14 @@
 [package]
 name = "howler-tui"
+description = "Terminal user interface for the Howler wolf-tracking platform"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [lib]
 name = "howler_tui"
@@ -14,8 +19,20 @@ name = "howler-tui"
 path = "src/main.rs"
 
 [dependencies]
-howler-core = { path = "../howler-core" }
+howler-core = { version = "0.1.0", path = "../howler-core" }
 ratatui = "0.28"
 crossterm = "0.28"
 tokio = { workspace = true }
 anyhow = { workspace = true }
+
+[package.metadata.deb]
+name = "howler-tui"
+maintainer = "Howler Contributors"
+copyright = "2024, Howler Contributors"
+extended-description = "Terminal user interface for the Howler wolf-tracking platform"
+section = "science"
+priority = "optional"
+assets = [
+    ["target/release/howler-tui", "usr/bin/howler-tui", "755"],
+]
+depends = "libgcc-s1"
