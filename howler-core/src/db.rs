@@ -4,8 +4,102 @@ use chrono::{DateTime, Utc};
 use rusqlite::{params, Connection};
 use std::sync::Mutex;
 
+#[derive(uniffi::Object)]
 pub struct Database {
     conn: Mutex<Connection>,
+}
+
+#[uniffi::export]
+impl Database {
+    #[uniffi::constructor]
+    pub fn open(path: String) -> std::result::Result<Self, String> {
+        Database::new(&path).map_err(|e| e.to_string())
+    }
+
+    pub fn insert_sighting_record(
+        &self,
+        sighting: crate::models::MobileSighting,
+    ) -> std::result::Result<i64, String> {
+        let conn = self.conn.lock().unwrap();
+        let source_str = match sighting.source {
+            Source::GBIF => "GBIF",
+            Source::Movebank => "Movebank",
+            Source::INaturalist => "iNaturalist",
+            Source::IUCN => "IUCN",
+        };
+        let observed = chrono::DateTime::from_timestamp(sighting.observed_on, 0)
+            .unwrap_or_default()
+            .to_rfc3339();
+        conn.execute(
+            "INSERT OR REPLACE INTO sightings (species, scientific_name, latitude, longitude, observed_on, source, source_id, details)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![sighting.species, sighting.scientific_name, sighting.latitude, sighting.longitude, observed, source_str, sighting.source_id, sighting.details],
+        ).map_err(|e| e.to_string())?;
+        Ok(conn.last_insert_rowid())
+    }
+
+    pub fn get_sightings(&self) -> std::result::Result<Vec<crate::models::MobileSighting>, String> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn
+            .prepare("SELECT id, species, scientific_name, latitude, longitude, observed_on, source, source_id, details FROM sightings")
+            .map_err(|e| e.to_string())?;
+        let sightings = stmt
+            .query_map([], |row| {
+                let observed_str: String = row.get(5)?;
+                let ts = DateTime::parse_from_rfc3339(&observed_str)
+                    .map(|dt| dt.timestamp())
+                    .unwrap_or(0);
+                let source_str: String = row.get(6)?;
+                let source = match source_str.as_str() {
+                    "GBIF" => Source::GBIF,
+                    "Movebank" => Source::Movebank,
+                    "iNaturalist" => Source::INaturalist,
+                    _ => Source::IUCN,
+                };
+                Ok(crate::models::MobileSighting {
+                    id: Some(row.get(0)?),
+                    species: row.get(1)?,
+                    scientific_name: row.get(2)?,
+                    latitude: row.get(3)?,
+                    longitude: row.get(4)?,
+                    observed_on: ts,
+                    source,
+                    source_id: row.get(7)?,
+                    details: row.get(8)?,
+                })
+            })
+            .map_err(|e| e.to_string())?
+            .filter_map(|r| r.ok())
+            .collect();
+        Ok(sightings)
+    }
+
+    pub fn remove_sighting(&self, id: i64) -> std::result::Result<bool, String> {
+        let conn = self.conn.lock().unwrap();
+        let affected = conn
+            .execute("DELETE FROM sightings WHERE id = ?1", params![id])
+            .map_err(|e| e.to_string())?;
+        Ok(affected > 0)
+    }
+
+    pub fn count_sightings(&self) -> std::result::Result<i64, String> {
+        let conn = self.conn.lock().unwrap();
+        conn.query_row("SELECT COUNT(*) FROM sightings", [], |row| row.get(0))
+            .map_err(|e| e.to_string())
+    }
+
+    pub fn list_unique_species(&self) -> std::result::Result<Vec<String>, String> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn
+            .prepare("SELECT DISTINCT species FROM sightings ORDER BY species")
+            .map_err(|e| e.to_string())?;
+        let species = stmt
+            .query_map([], |row| row.get(0))
+            .map_err(|e| e.to_string())?
+            .filter_map(|r| r.ok())
+            .collect();
+        Ok(species)
+    }
 }
 
 impl Database {

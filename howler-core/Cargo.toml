@@ -10,12 +10,22 @@ readme.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
+[lib]
+crate-type = ["lib", "cdylib"]
+name = "howler_core"
+
+[features]
+default = ["server", "ml", "api-fetch"]
+mobile = []
+server = ["dep:axum", "dep:tower-http", "dep:futures-util", "dep:tokio"]
+ml = ["dep:linfa", "dep:linfa-linear", "dep:linfa-trees", "dep:ndarray"]
+api-fetch = ["dep:reqwest", "dep:tokio"]
+
 [dependencies]
-reqwest = { workspace = true }
+uniffi = { version = "0.28", features = ["cli"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 rusqlite = { workspace = true }
-tokio = { workspace = true }
 chrono = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
@@ -23,18 +33,25 @@ geo = "0.28"
 geojson = "0.24"
 rstar = "0.12"
 csv = "1.3"
-linfa = { version = "0.7", features = ["serde"] }
-linfa-linear = "0.7"
-linfa-trees = "0.7"
-ndarray = { version = "0.15", features = ["serde"] }
-rand = "0.8"
-axum = { version = "0.7", features = ["ws"] }
-tower-http = { version = "0.5", features = ["cors"] }
-futures-util = "0.3"
 argon2 = "0.5"
 uuid = { version = "1.8", features = ["v4"] }
 base64 = { workspace = true }
 toml = { workspace = true }
+rand = "0.8"
+
+# Optional heavy deps (gated behind features)
+axum = { version = "0.7", features = ["ws"], optional = true }
+tower-http = { version = "0.5", features = ["cors"], optional = true }
+tokio = { version = "1.0", features = ["full"], optional = true }
+futures-util = { version = "0.3", optional = true }
+reqwest = { version = "0.12", features = ["json"], optional = true }
+linfa = { version = "0.7", features = ["serde"], optional = true }
+linfa-linear = { version = "0.7", optional = true }
+linfa-trees = { version = "0.7", optional = true }
+ndarray = { version = "0.15", features = ["serde"], optional = true }
+
+[build-dependencies]
+uniffi = { version = "0.28", features = ["build"] }
 
 [dev-dependencies]
 mockito = "1.4"
