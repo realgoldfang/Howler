@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { FilterParams, Sighting, MovementAnalysis, TemporalAnalysis, Territory } from './types';
 
-const API_BASE = 'http://localhost:8080';
+export const API_BASE = 'http://localhost:8080';
 
 const client = axios.create({
   baseURL: API_BASE,

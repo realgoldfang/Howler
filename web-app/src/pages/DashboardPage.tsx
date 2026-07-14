@@ -1,18 +1,16 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { sightingsApi } from '../api'
 import type { Sighting } from '../types'
 import StatsCard from '../components/StatsCard'
 import SightingTable from '../components/SightingTable'
 import SightingModal from '../components/SightingModal'
+import ConnectionStatus from '../components/ConnectionStatus'
+import { useAutoFetch } from '../hooks/useAutoFetch'
+import { useWebSocket } from '../hooks/useWebSocket'
 
 export default function DashboardPage() {
   const [selectedSighting, setSelectedSighting] = useState<Sighting | null>(null)
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['sightings', 'dashboard'],
-    queryFn: () => sightingsApi.list({ per_page: 50, sort_by: 'timestamp', sort_dir: 'desc' }),
-  })
+  const { lastFetchTime, data, isLoading } = useAutoFetch(['sightings', 'dashboard'])
+  const { isConnected } = useWebSocket(['sightings'])
 
   const sightings = data?.items ?? []
 
@@ -27,13 +25,29 @@ export default function DashboardPage() {
     }).length,
   }
 
+  const getRelativeTime = (date: Date | null) => {
+    if (!date) return 'Never'
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+    if (seconds < 60) return `${seconds} seconds ago`
+    const minutes = Math.floor(seconds / 60)
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
+  }
+
   return (
     <div>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 700 }}>Dashboard</h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginTop: '4px' }}>
-          Overview of wolf sighting activity
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+        <div>
+          <h1 style={{ fontSize: '24px', fontWeight: 700 }}>Dashboard</h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginTop: '4px' }}>
+            Overview of wolf sighting activity
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+          <ConnectionStatus isConnected={isConnected} />
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            Last updated: {getRelativeTime(lastFetchTime)}
+          </span>
+        </div>
       </div>
 
       <div

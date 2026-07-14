@@ -1,25 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { fetchSightings } from '../api';
 import type { Sighting, FilterParams } from '../types';
 import SightingCard from '../components/SightingCard';
 import FilterBar from '../components/FilterBar';
 import EmptyState from '../components/EmptyState';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ConnectionBanner from '../components/ConnectionBanner';
+import { useAutoFetch } from '../hooks/useAutoFetch';
 
 export default function HomeScreen() {
   const [filters, setFilters] = useState<FilterParams>({});
+  const [showBanner, setShowBanner] = useState(false);
+  const prevOnlineRef = useRef<boolean | null>(null);
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['sightings', filters],
-    queryFn: () => fetchSightings(filters),
-  });
+  const { data, isLoading, refetch, isOnline } = useAutoFetch(['sightings', filters]);
+
+  useEffect(() => {
+    if (prevOnlineRef.current !== null && prevOnlineRef.current !== isOnline) {
+      setShowBanner(true);
+    }
+    prevOnlineRef.current = isOnline;
+  }, [isOnline]);
 
   if (isLoading) return <LoadingSpinner />;
 
   return (
     <View style={styles.container}>
+      <ConnectionBanner isOnline={isOnline} showBanner={showBanner} />
       <FilterBar onChange={setFilters} />
       <FlatList
         data={data || []}
@@ -27,7 +34,7 @@ export default function HomeScreen() {
         renderItem={({ item }) => <SightingCard sighting={item} />}
         ListEmptyComponent={<EmptyState message="No sightings found" />}
         contentContainerStyle={data?.length === 0 ? styles.emptyContainer : undefined}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#2563eb" />}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} tintColor="#2563eb" />}
       />
     </View>
   );

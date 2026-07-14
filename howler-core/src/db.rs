@@ -2,24 +2,27 @@ use crate::models::{Sighting, Source, SpeciesStatus};
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use rusqlite::{params, Connection};
+use std::sync::Mutex;
 
 pub struct Database {
-    conn: Connection,
+    conn: Mutex<Connection>,
 }
 
 impl Database {
     pub fn new(path: &str) -> Result<Self> {
         let conn = Connection::open(path).context("Failed to open database")?;
 
-        let db = Database { conn };
+        let db = Database {
+            conn: Mutex::new(conn),
+        };
         db.init_schema()?;
         Ok(db)
     }
 
     fn init_schema(&self) -> Result<()> {
-        self.conn
-            .execute(
-                "CREATE TABLE IF NOT EXISTS sightings (
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS sightings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 species TEXT NOT NULL,
                 scientific_name TEXT,
@@ -31,13 +34,12 @@ impl Database {
                 details TEXT,
                 UNIQUE(source, source_id)
             )",
-                [],
-            )
-            .context("Failed to create sightings table")?;
+            [],
+        )
+        .context("Failed to create sightings table")?;
 
-        self.conn
-            .execute(
-                "CREATE TABLE IF NOT EXISTS species_status (
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS species_status (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 scientific_name TEXT NOT NULL UNIQUE,
                 common_name TEXT,
@@ -45,14 +47,13 @@ impl Database {
                 population_trend TEXT,
                 threats TEXT
             )",
-                [],
-            )
-            .context("Failed to create species_status table")?;
+            [],
+        )
+        .context("Failed to create species_status table")?;
 
         // New tables for advanced features
-        self.conn
-            .execute(
-                "CREATE TABLE IF NOT EXISTS packs (
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS packs (
                 pack_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 territory_geometry TEXT,
                 estimated_size INTEGER,
@@ -60,13 +61,12 @@ impl Database {
                 center_longitude REAL,
                 area_km2 REAL
             )",
-                [],
-            )
-            .context("Failed to create packs table")?;
+            [],
+        )
+        .context("Failed to create packs table")?;
 
-        self.conn
-            .execute(
-                "CREATE TABLE IF NOT EXISTS individuals (
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS individuals (
                 individual_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 individual_identifier TEXT UNIQUE,
                 species TEXT,
@@ -75,13 +75,12 @@ impl Database {
                 pack_id INTEGER,
                 FOREIGN KEY (pack_id) REFERENCES packs(pack_id)
             )",
-                [],
-            )
-            .context("Failed to create individuals table")?;
+            [],
+        )
+        .context("Failed to create individuals table")?;
 
-        self.conn
-            .execute(
-                "CREATE TABLE IF NOT EXISTS movements (
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS movements (
                 movement_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 from_sighting_id INTEGER,
                 to_sighting_id INTEGER,
@@ -92,56 +91,54 @@ impl Database {
                 FOREIGN KEY (from_sighting_id) REFERENCES sightings(id),
                 FOREIGN KEY (to_sighting_id) REFERENCES sightings(id)
             )",
-                [],
-            )
-            .context("Failed to create movements table")?;
+            [],
+        )
+        .context("Failed to create movements table")?;
 
         // Indexes for performance
-        self.conn
-            .execute(
-                "CREATE INDEX IF NOT EXISTS idx_sightings_species ON sightings(species)",
-                [],
-            )
-            .context("Failed to create species index")?;
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_sightings_species ON sightings(species)",
+            [],
+        )
+        .context("Failed to create species index")?;
 
-        self.conn
-            .execute(
-                "CREATE INDEX IF NOT EXISTS idx_sightings_source ON sightings(source)",
-                [],
-            )
-            .context("Failed to create source index")?;
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_sightings_source ON sightings(source)",
+            [],
+        )
+        .context("Failed to create source index")?;
 
-        self.conn
-            .execute(
-                "CREATE INDEX IF NOT EXISTS idx_sightings_observed_on ON sightings(observed_on)",
-                [],
-            )
-            .context("Failed to create observed_on index")?;
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_sightings_observed_on ON sightings(observed_on)",
+            [],
+        )
+        .context("Failed to create observed_on index")?;
 
-        self.conn.execute(
+        conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_sightings_location ON sightings(latitude, longitude)",
             [],
-        ).context("Failed to create location index")?;
+        )
+        .context("Failed to create location index")?;
 
-        self.conn
-            .execute(
-                "CREATE INDEX IF NOT EXISTS idx_individuals_pack ON individuals(pack_id)",
-                [],
-            )
-            .context("Failed to create individuals pack index")?;
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_individuals_pack ON individuals(pack_id)",
+            [],
+        )
+        .context("Failed to create individuals pack index")?;
 
         // Performance optimizations
-        let _ = self.conn.query_row("PRAGMA journal_mode = WAL", [], |row| {
+        let _ = conn.query_row("PRAGMA journal_mode = WAL", [], |row| {
             row.get::<_, String>(0)
         });
-        let _ = self.conn.execute("PRAGMA synchronous = NORMAL", []);
-        let _ = self.conn.execute("PRAGMA cache_size = -64000", []);
+        let _ = conn.execute("PRAGMA synchronous = NORMAL", []);
+        let _ = conn.execute("PRAGMA cache_size = -64000", []);
 
         Ok(())
     }
 
     pub fn insert_sighting(&self, sighting: &Sighting) -> Result<i64> {
-        self.conn.execute(
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
             "INSERT OR REPLACE INTO sightings 
              (species, scientific_name, latitude, longitude, observed_on, source, source_id, details)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -155,15 +152,16 @@ impl Database {
                 sighting.source_id,
                 sighting.details,
             ],
-        ).context("Failed to insert sighting")?;
+        )
+        .context("Failed to insert sighting")?;
 
-        Ok(self.conn.last_insert_rowid())
+        Ok(conn.last_insert_rowid())
     }
 
     /// Batch insert sightings for better performance
-    pub fn insert_sightings_batch(&mut self, sightings: &[Sighting]) -> Result<usize> {
-        let tx = self
-            .conn
+    pub fn insert_sightings_batch(&self, sightings: &[Sighting]) -> Result<usize> {
+        let mut conn = self.conn.lock().unwrap();
+        let tx = conn
             .transaction()
             .context("Failed to begin transaction")?;
 
@@ -183,7 +181,8 @@ impl Database {
                     sighting.source_id,
                     sighting.details,
                 ],
-            ).context("Failed to insert sighting in batch")?;
+            )
+            .context("Failed to insert sighting in batch")?;
             count += 1;
         }
 
@@ -192,10 +191,13 @@ impl Database {
     }
 
     pub fn get_all_sightings(&self) -> Result<Vec<Sighting>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT id, species, scientific_name, latitude, longitude, observed_on, source, source_id, details
-             FROM sightings"
-        ).context("Failed to prepare query")?;
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn
+            .prepare(
+                "SELECT id, species, scientific_name, latitude, longitude, observed_on, source, source_id, details
+                 FROM sightings",
+            )
+            .context("Failed to prepare query")?;
 
         let sightings = stmt
             .query_map([], |row| {
@@ -235,29 +237,32 @@ impl Database {
     }
 
     pub fn insert_species_status(&self, status: &SpeciesStatus) -> Result<i64> {
-        self.conn
-            .execute(
-                "INSERT OR REPLACE INTO species_status 
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT OR REPLACE INTO species_status 
              (scientific_name, common_name, red_list_category, population_trend, threats)
              VALUES (?1, ?2, ?3, ?4, ?5)",
-                params![
-                    status.scientific_name,
-                    status.common_name,
-                    status.red_list_category,
-                    status.population_trend,
-                    status.threats,
-                ],
-            )
-            .context("Failed to insert species status")?;
+            params![
+                status.scientific_name,
+                status.common_name,
+                status.red_list_category,
+                status.population_trend,
+                status.threats,
+            ],
+        )
+        .context("Failed to insert species status")?;
 
-        Ok(self.conn.last_insert_rowid())
+        Ok(conn.last_insert_rowid())
     }
 
     pub fn get_species_status(&self, scientific_name: &str) -> Result<Option<SpeciesStatus>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT id, scientific_name, common_name, red_list_category, population_trend, threats
-             FROM species_status WHERE scientific_name = ?1"
-        ).context("Failed to prepare query")?;
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn
+            .prepare(
+                "SELECT id, scientific_name, common_name, red_list_category, population_trend, threats
+                 FROM species_status WHERE scientific_name = ?1",
+            )
+            .context("Failed to prepare query")?;
 
         let mut result = None;
         let mut rows = stmt.query(params![scientific_name])?;
@@ -274,5 +279,10 @@ impl Database {
         }
 
         Ok(result)
+    }
+
+    /// Get a reference to the underlying connection for auth/annotation modules
+    pub fn connection(&self) -> std::sync::MutexGuard<'_, Connection> {
+        self.conn.lock().unwrap()
     }
 }

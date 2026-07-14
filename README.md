@@ -17,7 +17,7 @@ A production-ready application for tracking and analyzing wolf (Canis lupus) sig
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/howler.git
+git clone https://github.com/realgoldfang/howler.git
 cd howler
 cargo build --release
 ```
@@ -32,7 +32,7 @@ cargo install howler-gui
 
 ### Pre-built Binaries
 
-Download pre-built binaries from the [Releases](https://github.com/yourusername/howler/releases) page.
+Download pre-built binaries from the [Releases](https://github.com/realgoldfang/howler/releases) page.
 
 ## Quick Start
 
@@ -291,9 +291,9 @@ This project is licensed under either of:
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/howler/issues)
+- **Issues**: [GitHub Issues](https://github.com/realgoldfang/howler/issues)
 - **Documentation**: [docs/](docs/)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/howler/discussions)
+- **Discussions**: [GitHub Discussions](https://github.com/realgoldfang/howler/discussions)
 
 ## Roadmap
 

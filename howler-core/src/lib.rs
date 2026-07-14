@@ -1,3 +1,5 @@
+pub mod annotations;
+pub mod auth;
 pub mod clustering;
 pub mod config;
 pub mod db;
@@ -12,7 +14,10 @@ pub mod ml;
 pub mod models;
 pub mod movebank;
 pub mod movement;
+pub mod streaming;
 pub mod temporal;
+pub mod web_server;
+pub mod websocket;
 
 #[cfg(test)]
 mod tests;
@@ -28,4 +33,6 @@ pub use ml::{
 };
 pub use models::{Sighting, Source};
 pub use movement::{Movement, MovementAnalysis, MovementPattern};
+pub use streaming::{Broadcast, StreamingEvent};
 pub use temporal::{ActivityStats, Season, TemporalAnalysis, TimePeriod};
+pub use web_server::AppState;

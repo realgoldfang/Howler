@@ -3,6 +3,8 @@ use clap::{Parser, Subcommand};
 use howler_core::{Config, Database, Source};
 use std::collections::HashMap;
 
+mod server;
+
 #[derive(Parser)]
 #[command(name = "howler")]
 #[command(about = "Real-world wolf tracking and sighting data", long_about = None)]
@@ -23,6 +25,12 @@ enum Commands {
     Gui,
     /// Generate a report from cached data
     Report,
+    /// Start the HTTP/WebSocket server
+    Server {
+        /// Port to listen on
+        #[arg(long, default_value_t = 8080)]
+        port: u16,
+    },
 }
 
 fn generate_report(db: &Database) -> Result<()> {
@@ -186,6 +194,10 @@ fn main() -> Result<()> {
         Some(Commands::Report) => {
             let db = Database::new("howler.db")?;
             generate_report(&db)
+        }
+        Some(Commands::Server { port }) => {
+            let rt = tokio::runtime::Runtime::new()?;
+            rt.block_on(server::run_server(port))
         }
         None => {
             // Default to TUI

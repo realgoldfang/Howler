@@ -1,3 +1,4 @@
+mod auth_test;
 mod config_test;
 mod db_test;
 mod gbif_test;
@@ -5,3 +6,4 @@ mod inaturalist_test;
 mod iucn_test;
 mod models_test;
 mod movebank_test;
+mod streaming_test;

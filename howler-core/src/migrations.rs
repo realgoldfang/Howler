@@ -81,6 +81,57 @@ pub fn get_migrations() -> Vec<Migration> {
                 CREATE INDEX IF NOT EXISTS idx_individuals_pack ON individuals(pack_id);
             "#,
         },
+        Migration {
+            version: 3,
+            name: "add_auth_and_annotations",
+            sql: r#"
+                CREATE TABLE IF NOT EXISTS users (
+                    id TEXT PRIMARY KEY,
+                    username TEXT NOT NULL UNIQUE,
+                    email TEXT NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'Viewer',
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS sessions (
+                    user_id TEXT NOT NULL,
+                    token TEXT PRIMARY KEY,
+                    expires_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                );
+
+                CREATE TABLE IF NOT EXISTS annotations (
+                    id TEXT PRIMARY KEY,
+                    sighting_id INTEGER NOT NULL,
+                    user_id TEXT NOT NULL,
+                    text TEXT NOT NULL,
+                    annotation_type TEXT NOT NULL DEFAULT 'Comment',
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY (sighting_id) REFERENCES sightings(id),
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                );
+
+                CREATE TABLE IF NOT EXISTS sighting_ratings (
+                    id TEXT PRIMARY KEY,
+                    sighting_id INTEGER NOT NULL,
+                    user_id TEXT NOT NULL,
+                    confidence INTEGER NOT NULL CHECK(confidence >= 1 AND confidence <= 5),
+                    notes TEXT,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (sighting_id) REFERENCES sightings(id),
+                    FOREIGN KEY (user_id) REFERENCES users(id),
+                    UNIQUE(sighting_id, user_id)
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
+                CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+                CREATE INDEX IF NOT EXISTS idx_annotations_sighting ON annotations(sighting_id);
+                CREATE INDEX IF NOT EXISTS idx_annotations_user ON annotations(user_id);
+                CREATE INDEX IF NOT EXISTS idx_ratings_sighting ON sighting_ratings(sighting_id);
+            "#,
+        },
     ]
 }
 
@@ -158,9 +209,10 @@ mod tests {
     #[test]
     fn test_get_migrations() {
         let migrations = get_migrations();
-        assert_eq!(migrations.len(), 2);
+        assert_eq!(migrations.len(), 3);
         assert_eq!(migrations[0].version, 1);
         assert_eq!(migrations[1].version, 2);
+        assert_eq!(migrations[2].version, 3);
     }
 
     #[test]
@@ -171,7 +223,7 @@ mod tests {
         run_migrations(&conn).unwrap();
 
         let version = get_current_version(&conn).unwrap();
-        assert_eq!(version, 2);
+        assert_eq!(version, 3);
     }
 
     #[test]
