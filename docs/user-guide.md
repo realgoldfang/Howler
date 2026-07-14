@@ -7,6 +7,8 @@ This guide provides detailed instructions for using Howler's various interfaces 
 - [CLI Reference](#cli-reference)
 - [TUI Guide](#tui-guide)
 - [GUI Guide](#gui-guide)
+- [Web App Guide](#web-app-guide)
+- [Mobile App Guide](#mobile-app-guide)
 - [Data Interpretation](#data-interpretation)
 
 ## CLI Reference
@@ -253,6 +255,59 @@ The GUI consists of several panels:
 2. Select format (CSV, GeoJSON, KML, PNG)
 3. Choose output location
 4. Click "Export"
+
+### Web App
+
+#### Launching
+
+```bash
+cd web-app
+npm install
+npm run dev
+```
+
+Opens at `http://localhost:5173`.
+
+#### Pages
+
+- **Dashboard** (`/`): Stats cards (total sightings, sources, date range), recent sightings table with search and sort
+- **Map** (`/map`): SVG map with colored sighting dots, territory cluster ellipses, zoom controls
+- **Analysis** (`/analysis`): Movement statistics, temporal activity bar charts, territory detection
+- **Machine Learning** (`/ml`): Behavior predictions with confidence bars, activity pattern analysis
+- **Settings** (`/settings`): Server URL config, CSV/GeoJSON/KML export, file import
+
+#### Features
+
+- Dark/light theme toggle (persisted in localStorage)
+- Sortable, searchable, paginated sighting table
+- React Query caching for fast navigation
+- Responsive sidebar layout
+
+### Mobile App (React Native / Expo)
+
+#### Launching
+
+```bash
+cd mobile-app
+npm install
+npx expo start
+```
+
+Scan the QR code with Expo Go on iOS or Android.
+
+#### Screens
+
+- **Home**: FlatList of sightings with pull-to-refresh, filter bar (date range, source, species)
+- **Map**: Interactive map with colored markers by species, GPS location button
+- **Analysis**: Run movement, temporal, and territory analysis by selecting sighting IDs
+- **Settings**: Export to CSV/GeoJSON/KML via share sheet, import placeholder, server config
+
+#### Features
+
+- Bottom tab navigation
+- Pull-to-refresh on sighting list
+- Filter chips for GBIF/Movebank/iNaturalist sources
+- Loading spinners and empty states
 
 ## Data Interpretation
 

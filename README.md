@@ -1,29 +1,25 @@
 # Howler
 
-A production-ready desktop application for tracking and analyzing wolf (Canis lupus) sightings and movements across multiple data sources.
+A production-ready application for tracking and analyzing wolf (Canis lupus) sightings and movements across multiple data sources — with ML-powered behavior prediction.
 
 ## Features
 
 - **Multi-Source Data Integration**: Fetch wolf sightings from GBIF, iNaturalist, IUCN, and Movebank
-- **Advanced Analysis**: Pack territory detection, movement analysis, and temporal pattern detection
+- **Advanced Analysis**: Pack territory detection (DBSCAN), movement analysis, and temporal pattern detection
+- **Machine Learning**: Behavior prediction (stationary, territorial, linear, random, central-place), next-location forecasting, and activity pattern analysis
 - **Interactive Maps**: Full map capabilities with OpenStreetMap tiles, zoom/pan controls, and multiple layers
-- **Multiple Interfaces**: CLI, TUI (Terminal UI), and GUI (Desktop) interfaces
+- **Multiple Interfaces**: CLI, TUI (Terminal UI), GUI (Desktop), Web App, and Mobile App
 - **Data Management**: Filter, search, export (CSV, GeoJSON, KML), and import wolf sighting data
-- **Cross-Platform**: Runs on Linux, macOS, and Windows
+- **Cross-Platform**: Runs on Linux, macOS, Windows, iOS, and Android
 
 ## Installation
 
 ### From Source
 
 ```bash
-# Clone the repository
 git clone https://github.com/yourusername/howler.git
 cd howler
-
-# Build the project
 cargo build --release
-
-# The binaries will be in target/release/
 ```
 
 ### Using Cargo
@@ -65,6 +61,26 @@ howler-tui
 howler-gui
 ```
 
+### Web App
+
+```bash
+cd web-app
+npm install
+npm run dev
+```
+
+Opens at `http://localhost:5173` with dashboard, map, analysis, ML predictions, and settings.
+
+### Mobile App (React Native / Expo)
+
+```bash
+cd mobile-app
+npm install
+npx expo start
+```
+
+Scan the QR code with Expo Go on iOS or Android.
+
 ## Configuration
 
 Howler uses environment variables for API key configuration:
@@ -83,7 +99,7 @@ export IUCN_TOKEN="your_token"
 
 ### API Key Acquisition
 
-**Movebank**: 
+**Movebank**:
 1. Register at [movebank.org](https://www.movebank.org)
 2. Create an account and request access to studies
 3. Use your username and password
@@ -113,16 +129,6 @@ howler-cli --fetch --limit 50
 howler-cli --fetch --source gbif
 ```
 
-### Viewing Data
-
-```bash
-# Launch TUI interface
-howler-tui
-
-# Launch GUI with map
-howler-gui
-```
-
 ### Exporting Data
 
 ```bash
@@ -149,79 +155,102 @@ howler-cli --filter --source gbif
 howler-cli --filter --species "Canis lupus"
 ```
 
-## Development
+## Machine Learning
 
-### Prerequisites
+Howler includes an ML module for wolf behavior prediction using random forest classification and linear regression.
 
-- Rust 1.70 or later
-- Cargo
+### Behavior Classification
 
-### Building
+```rust
+use howler_core::ml::{BehaviorModel, BehaviorFeatures, BehaviorType};
 
-```bash
-# Build all components
-cargo build --workspace
+let model = BehaviorModel::new();
+let features = BehaviorFeatures::from_sightings(&sightings);
+let prediction = model.predict_behavior(&features);
 
-# Build specific component
-cargo build -p howler-core
-cargo build -p howler-cli
-cargo build -p howler-tui
-cargo build -p howler-gui
+match prediction.behavior_type {
+    BehaviorType::Territorial => println!("Pack territory behavior"),
+    BehaviorType::Linear => println!("Dispersal/migration pattern"),
+    BehaviorType::CentralPlace => println!("Den-based activity"),
+    // ...
+}
 ```
 
-### Testing
+### Next-Location Prediction
 
-```bash
-# Run all tests
-cargo test --workspace
-
-# Run tests for specific component
-cargo test -p howler-core
-
-# Run with coverage
-cargo tarpaulin --workspace
+```rust
+let location_pred = model.predict_next_location(&features);
+println!(
+    "Predicted: ({}, {}) in {} hours",
+    location_pred.latitude, location_pred.longitude, location_pred.time_horizon_hours
+);
 ```
 
-### Project Structure
+### Supported Behavior Types
+
+| Type | Description |
+|------|-------------|
+| `Stationary` | Wolf remains in small area (< 1km radius) |
+| `Territorial` | Circular/area-restricted movement |
+| `Linear` | Directed movement (dispersal/migration) |
+| `Random` | No discernible pattern |
+| `CentralPlace` | Activity centered on den site |
+
+## Project Structure
 
 ```
 howler/
-├── howler-core/      # Core library with data models and API clients
+├── howler-core/      # Core library: data models, API clients, ML, analysis
 ├── howler-cli/       # Command-line interface
-├── howler-tui/       # Terminal user interface
-├── howler-gui/       # Graphical user interface
+├── howler-tui/       # Terminal user interface (Ratatui)
+├── howler-gui/       # Desktop GUI (Iced)
+├── web-app/          # React + Vite web application
+├── mobile-app/       # React Native (Expo) mobile application
+├── shared/           # Shared TypeScript types and API client
 ├── fixtures/         # Test fixtures
 ├── docs/             # Documentation
 └── .github/          # CI/CD workflows
 ```
 
-## Advanced Features
+## Development
 
-### Pack Territory Detection
+### Prerequisites
 
-Howler uses DBSCAN clustering to detect wolf pack territories from GPS coordinates:
+- Rust 1.70 or later
+- Node.js 18+ (for web/mobile apps)
+- Expo CLI (for mobile app)
+
+### Building
 
 ```bash
-# Run territory detection
-howler-cli --analyze --territories
+# Build all Rust crates
+cargo build --workspace
+
+# Build web app
+cd web-app && npm install && npm run build
+
+# Build mobile app
+cd mobile-app && npm install && npx expo start
 ```
 
-### Movement Analysis
-
-Analyze wolf movement patterns, speeds, and directions:
+### Testing
 
 ```bash
-# Analyze movement
-howler-cli --analyze --movement
+# Run all Rust tests
+cargo test --all-features --workspace
+
+# Run with coverage
+cargo tarpaulin --workspace
 ```
 
-### Temporal Analysis
-
-Detect activity patterns by time of day and seasonal distributions:
+### Code Quality
 
 ```bash
-# Analyze temporal patterns
-howler-cli --analyze --temporal
+# Format
+cargo fmt
+
+# Lint
+cargo clippy -D warnings
 ```
 
 ## Contributing
@@ -231,18 +260,11 @@ Contributions are welcome! Please follow these guidelines:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests (`cargo test`)
-5. Run linters (`cargo fmt && cargo clippy`)
+4. Run tests (`cargo test --all-features --workspace`)
+5. Run linters (`cargo fmt && cargo clippy -D warnings`)
 6. Commit your changes (`git commit -m 'Add amazing feature'`)
 7. Push to the branch (`git push origin feature/amazing-feature`)
 8. Open a Pull Request
-
-### Code Style
-
-- Use `cargo fmt` for formatting
-- Use `cargo clippy` for linting
-- Write tests for new features
-- Update documentation as needed
 
 ## License
 
@@ -265,6 +287,7 @@ This project is licensed under either of:
 - IUCN for conservation status data
 - Movebank for GPS tracking data
 - The Rust community for excellent tools and libraries
+- linfa for machine learning primitives
 
 ## Support
 
@@ -274,8 +297,14 @@ This project is licensed under either of:
 
 ## Roadmap
 
+- [x] Multi-source data integration (GBIF, iNaturalist, IUCN, Movebank)
+- [x] DBSCAN territory detection
+- [x] Movement and temporal analysis
+- [x] CLI, TUI, and GUI interfaces
+- [x] Data export (CSV, GeoJSON, KML) and import
+- [x] Machine learning for behavior prediction
+- [x] Web application (React + Vite)
+- [x] Mobile application (React Native / Expo)
 - [ ] Real-time data streaming
-- [ ] Machine learning for behavior prediction
-- [ ] Mobile applications (iOS, Android)
-- [ ] Web application
 - [ ] Multi-user collaboration features
+- [ ] Offline map tiles for mobile

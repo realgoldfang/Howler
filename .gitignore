@@ -1,0 +1,8 @@
+/target
+/node_modules
+/howler.db
+/.vscode
+*.db
+*.log
+dist/
+.expo/
