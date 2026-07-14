@@ -1,0 +1,18 @@
+[package]
+name = "howler-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "howler"
+path = "src/main.rs"
+
+[dependencies]
+howler-core = { path = "../howler-core" }
+howler-tui = { path = "../howler-tui" }
+howler-gui = { path = "../howler-gui" }
+clap = { version = "4.5", features = ["derive"] }
+tokio = { workspace = true }
+anyhow = { workspace = true }

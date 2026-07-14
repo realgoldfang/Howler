@@ -1,0 +1,21 @@
+[package]
+name = "howler-tui"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "howler_tui"
+path = "src/lib.rs"
+
+[[bin]]
+name = "howler-tui"
+path = "src/main.rs"
+
+[dependencies]
+howler-core = { path = "../howler-core" }
+ratatui = "0.28"
+crossterm = "0.28"
+tokio = { workspace = true }
+anyhow = { workspace = true }
