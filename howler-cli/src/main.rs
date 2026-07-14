@@ -2,7 +2,6 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use howler_core::{Config, Database, Source};
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 mod server;
 
@@ -31,21 +30,6 @@ enum Commands {
         /// Port to listen on
         #[arg(long, default_value_t = 8080)]
         port: u16,
-    },
-    /// Obfuscate a token and save it to secrets.toml
-    Encrypt {
-        /// The plaintext token to obfuscate
-        #[arg(long)]
-        token: String,
-        /// Output path for secrets.toml
-        #[arg(long, default_value = "~/.config/howler/secrets.toml")]
-        output: String,
-    },
-    /// Decode an obfuscated token (for verification)
-    Decrypt {
-        /// The obfuscated token to decode
-        #[arg(long)]
-        token: String,
     },
 }
 
@@ -214,19 +198,6 @@ fn main() -> Result<()> {
         Some(Commands::Server { port }) => {
             let rt = tokio::runtime::Runtime::new()?;
             rt.block_on(server::run_server(port))
-        }
-        Some(Commands::Encrypt { token, output }) => {
-            let output_path = PathBuf::from(shellexpand::tilde(&output).to_string());
-            howler_core::crypto::save_iucn_token_to_secrets(&output_path, &token)?;
-            let obfuscated = howler_core::crypto::obfuscate(&token);
-            println!("Token obfuscated and saved to {}", output_path.display());
-            println!("Obfuscated: {}", obfuscated);
-            Ok(())
-        }
-        Some(Commands::Decrypt { token }) => {
-            let decoded = howler_core::crypto::deobfuscate(&token)?;
-            println!("Decoded: {}", decoded);
-            Ok(())
         }
         None => {
             // Default to TUI
