@@ -1,11 +1,22 @@
 import axios from 'axios';
 import type { Sighting } from './types';
 
+let apiKeyHeaders: Record<string, string> = {};
+
+export function setApiKeyHeaders(headers: Record<string, string>) {
+  apiKeyHeaders = headers;
+}
+
 export const API_BASE = 'http://localhost:8080';
 
 const client = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
+});
+
+client.interceptors.request.use((config) => {
+  Object.assign(config.headers, apiKeyHeaders);
+  return config;
 });
 
 interface ApiResponse<T> {
