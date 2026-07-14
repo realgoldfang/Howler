@@ -1,0 +1,132 @@
+name: Mobile Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-android:
+    name: Android Libraries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - aarch64-linux-android
+          - armv7-linux-androideabi
+          - x86_64-linux-android
+          - i686-linux-android
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+        target: ${{ matrix.target }}
+
+    - name: Install cargo-ndk
+      run: cargo install cargo-ndk
+
+    - name: Setup Android NDK
+      uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r26b
+
+    - name: Build for Android
+      run: |
+        cargo ndk -t ${{ matrix.target }} -o ./jni-libs build --release -p howler-core --no-default-features --features mobile
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+    - name: Generate UniFFI Kotlin bindings
+      if: matrix.target == 'aarch64-linux-android'
+      run: |
+        cargo install uniffi-bindgen
+        uniffi-bindgen generate --library target/release/libhowler_core.so --language kotlin --out-dir ./bindings/kotlin
+
+    - name: Upload Android artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-${{ matrix.target }}
+        path: jni-libs/
+
+    - name: Upload Kotlin bindings
+      if: matrix.target == 'aarch64-linux-android'
+      uses: actions/upload-artifact@v4
+      with:
+        name: kotlin-bindings
+        path: bindings/kotlin/
+
+  build-ios:
+    name: iOS Libraries
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+        target: aarch64-apple-ios
+
+    - name: Build for iOS
+      run: |
+        cargo build --release --target aarch64-apple-ios -p howler-core --no-default-features --features mobile
+
+    - name: Create XCFramework
+      run: |
+        mkdir -p howler-core.xcframework/ios-arm64
+        cp target/aarch64-apple-ios/release/libhowler_core.a howler-core.xcframework/ios-arm64/
+        
+        cat > howler-core.xcframework/Info.plist << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleDevelopmentRegion</key>
+            <string>en</string>
+            <key>CFBundleExecutable</key>
+            <string>libhowler_core</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.howler.core</string>
+            <key>CFBundleInfoDictionaryVersion</key>
+            <string>6.0</string>
+            <key>CFBundleName</key>
+            <string>HowlerCore</string>
+            <key>CFBundlePackageType</key>
+            <string>XFWK</string>
+            <key>CFBundleShortVersionString</key>
+            <string>0.1.0</string>
+            <key>CFBundleVersion</key>
+            <string>1</string>
+        </dict>
+        </plist>
+        EOF
+
+    - name: Generate UniFFI Swift bindings
+      run: |
+        cargo install uniffi-bindgen
+        uniffi-bindgen generate --library target/aarch64-apple-ios/release/libhowler_core.a --language swift --out-dir ./bindings/swift
+
+    - name: Upload iOS artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-arm64
+        path: |
+          howler-core.xcframework/
+          bindings/swift/
