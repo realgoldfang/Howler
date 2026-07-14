@@ -28,24 +28,32 @@ export MOVEBANK_PASSWORD="your_movebank_password"
 
 iNaturalist provides citizen science observations.
 
-**Required Variable:**
+**Status: Optional (disabled by default)**
+
+iNaturalist requires an OAuth application, which needs:
+- An iNaturalist account at least **5 months old**
+- At least **10 observations** posted
+
+If you don't meet these requirements, Howler skips iNaturalist data gracefully.
+
+**Required Variable (only if you have a token):**
 ```bash
 export INATURALIST_TOKEN="your_inaturalist_token"
 ```
 
 **How to Get Token:**
 1. Visit [inaturalist.org](https://www.inaturalist.org)
-2. Sign up or log in
+2. Sign up or log in (account must be 5+ months old with 10+ observations)
 3. Go to your account settings
 4. Navigate to "Applications" or "API"
 5. Create a new application
 6. Copy the access token
 
-**Note:** iNaturalist can be used without authentication, but with limited results and rate limits.
+**Note:** If no token is set, Howler skips iNaturalist entirely with a clear message.
 
 ### IUCN Configuration
 
-IUCN provides conservation status data.
+IUCN provides conservation status data via the **v4 API** (v3 is retired).
 
 **Required Variable:**
 ```bash
@@ -53,12 +61,19 @@ export IUCN_TOKEN="your_iucn_token"
 ```
 
 **How to Get Token:**
-1. Visit [api.iucnredlist.org](https://apiv3.iucnredlist.org)
-2. Register for an API token
-3. Wait for approval (may take time)
-4. Use the provided token
+1. Visit [api.iucnredlist.org](https://api.iucnredlist.org)
+2. Click **Register** in the top-right corner
+3. Create an account at [iucnredlist.org/users/sign_up](https://www.iucnredlist.org/users/sign_up)
+4. After registering, go to your account page to find your API token
+5. Copy the token and set it as `IUCN_TOKEN`
 
-**Note:** IUCN API requires authentication for all requests.
+**Important Notes:**
+- The v4 API is the current version (v3 is end-of-life)
+- Non-commercial use only — for commercial use, see [IBAT](https://www.ibat-alliance.org)
+- Rate limits apply; cache data locally when possible
+- If your token is revoked, contact redlist@iucn.org
+
+**Note:** IUCN data is optional. If no token is set, Howler skips IUCN data gracefully.
 
 ## Setting Environment Variables
 

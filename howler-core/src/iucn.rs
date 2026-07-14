@@ -4,7 +4,10 @@ use crate::models::SpeciesStatus;
 use anyhow::{Context, Result};
 use serde::Deserialize;
 
-const IUCN_API_BASE: &str = "https://apiv3.iucnredlist.org/api/v3";
+// IUCN Red List API v4 (v3 is retired)
+// Register at: https://api.iucnredlist.org/users/sign_up
+// Docs at: https://api.iucnredlist.org/api-docs (requires login)
+const IUCN_API_BASE: &str = "https://api.iucnredlist.org";
 
 #[derive(Debug, Deserialize)]
 struct IUCNSpeciesResponse {
@@ -147,13 +150,12 @@ impl IUCNClient {
 }
 
 pub async fn fetch_and_cache_iucn(db: &Database, config: &Config) -> Result<usize> {
-    let client = IUCNClient::new(config);
-
     if !config.has_iucn_token() {
-        eprintln!("IUCN token not found, skipping IUCN data");
+        eprintln!("IUCN: skipping (no token configured). To enable, set IUCN_TOKEN.");
         return Ok(0);
     }
 
+    let client = IUCNClient::new(config);
     let status = client.fetch_wolf_status().await?;
 
     if let Some(status) = status {

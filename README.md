@@ -90,12 +90,14 @@ Howler uses environment variables for API key configuration:
 export MOVEBANK_USERNAME="your_username"
 export MOVEBANK_PASSWORD="your_password"
 
-# iNaturalist API token (for citizen science observations)
+# iNaturalist API token (optional — requires 5-month-old account with 10+ observations)
 export INATURALIST_TOKEN="your_token"
 
-# IUCN API token (for conservation status)
+# IUCN API token (optional — register at https://api.iucnredlist.org/users/sign_up)
 export IUCN_TOKEN="your_token"
 ```
+
+**All sources are optional.** Howler works without any API keys — it just uses GBIF (which is free and open).
 
 ### API Key Acquisition
 

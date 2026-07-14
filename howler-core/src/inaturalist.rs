@@ -151,12 +151,12 @@ pub async fn fetch_and_cache_inaturalist(
     config: &Config,
     limit: u32,
 ) -> Result<usize> {
-    let client = INaturalistClient::new(config);
-
     if !config.has_inaturalist_token() {
-        eprintln!("iNaturalist token not found, fetching without authentication (limited results)");
+        eprintln!("iNaturalist: skipping (no token configured). To enable, set INATURALIST_TOKEN.");
+        return Ok(0);
     }
 
+    let client = INaturalistClient::new(config);
     let sightings = client.fetch_wolf_sightings(limit).await?;
 
     let mut count = 0;
