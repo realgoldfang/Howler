@@ -16,3 +16,4 @@ howler-gui = { path = "../howler-gui" }
 clap = { version = "4.5", features = ["derive"] }
 tokio = { workspace = true }
 anyhow = { workspace = true }
+shellexpand = "3.1"

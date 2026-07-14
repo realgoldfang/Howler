@@ -55,25 +55,33 @@ export INATURALIST_TOKEN="your_inaturalist_token"
 
 IUCN provides conservation status data via the **v4 API** (v3 is retired).
 
-**Required Variable:**
+**How it works:**
+
+Howler includes an obfuscated IUCN token in `~/.config/howler/secrets.toml`. When you run Howler, it automatically decodes and uses the token — no configuration needed.
+
+**If you need to set your own token:**
 ```bash
+# Obfuscate and save a new token
+howler encrypt --token "your_iucn_token"
+
+# Or set via environment variable (takes precedence over secrets file)
 export IUCN_TOKEN="your_iucn_token"
 ```
 
-**How to Get Token:**
-1. Visit [api.iucnredlist.org](https://api.iucnredlist.org)
-2. Click **Register** in the top-right corner
-3. Create an account at [iucnredlist.org/users/sign_up](https://www.iucnredlist.org/users/sign_up)
-4. After registering, go to your account page to find your API token
-5. Copy the token and set it as `IUCN_TOKEN`
+**Verify a token:**
+```bash
+howler decrypt --token "obfuscated_token_string"
+```
+
+**How obfuscation works:**
+- Token is XOR-encoded + base64-encoded (prevents casual reading)
+- NOT real encryption — anyone with the source code can decode it
+- Fine for sharing a conservation API token with your community
 
 **Important Notes:**
-- The v4 API is the current version (v3 is end-of-life)
 - Non-commercial use only — for commercial use, see [IBAT](https://www.ibat-alliance.org)
 - Rate limits apply; cache data locally when possible
 - If your token is revoked, contact redlist@iucn.org
-
-**Note:** IUCN data is optional. If no token is set, Howler skips IUCN data gracefully.
 
 ## Setting Environment Variables
 

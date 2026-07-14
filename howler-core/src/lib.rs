@@ -2,6 +2,7 @@ pub mod annotations;
 pub mod auth;
 pub mod clustering;
 pub mod config;
+pub mod crypto;
 pub mod db;
 pub mod export;
 pub mod filter;
