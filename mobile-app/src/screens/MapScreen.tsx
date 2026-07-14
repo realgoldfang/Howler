@@ -39,7 +39,7 @@ export default function MapScreen() {
 
   const { data: sightings } = useQuery({
     queryKey: ['sightings'],
-    queryFn: () => fetchSightings({ limit: 200 }),
+    queryFn: fetchSightings,
   });
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { FilterParams, Sighting, MovementAnalysis, TemporalAnalysis, Territory } from './types';
+import type { Sighting } from './types';
 
 export const API_BASE = 'http://localhost:8080';
 
@@ -8,46 +8,57 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-export async function fetchSightings(params?: FilterParams): Promise<Sighting[]> {
-  const { data } = await client.get('/api/sightings', { params });
-  return data;
+interface ApiResponse<T> {
+  success: boolean;
+  data: T | null;
+  error: string | null;
+}
+
+async function unwrap<T>(promise: Promise<any>): Promise<T> {
+  const response = await promise;
+  const res: ApiResponse<T> = response.data;
+  if (!res.success || res.data === null) {
+    throw new Error(res.error || 'Unknown API error');
+  }
+  return res.data;
+}
+
+export async function fetchSightings(): Promise<Sighting[]> {
+  return unwrap<Sighting[]>(client.get('/api/sightings'));
 }
 
 export async function fetchSighting(id: number): Promise<Sighting> {
-  const { data } = await client.get(`/api/sightings/${id}`);
-  return data;
+  return unwrap<Sighting>(client.get(`/api/sightings/${id}`));
 }
 
-export async function createSighting(sighting: Omit<Sighting, 'id'>): Promise<Sighting> {
-  const { data } = await client.post('/api/sightings', sighting);
-  return data;
+export async function createSighting(sighting: Omit<Sighting, 'id'>): Promise<number> {
+  return unwrap<number>(client.post('/api/sightings', {
+    species: sighting.species,
+    scientific_name: sighting.scientificName,
+    latitude: sighting.latitude,
+    longitude: sighting.longitude,
+    source: sighting.source,
+    source_id: sighting.sourceId || '',
+    details: sighting.details,
+  }));
 }
 
-export async function analyzeMovement(sightingIds: number[]): Promise<MovementAnalysis> {
-  const { data } = await client.post('/api/analysis/movement', { sighting_ids: sightingIds });
-  return data;
+export async function updateSighting(id: number, sighting: Omit<Sighting, 'id'>): Promise<number> {
+  return unwrap<number>(client.put(`/api/sightings/${id}`, {
+    species: sighting.species,
+    scientific_name: sighting.scientificName,
+    latitude: sighting.latitude,
+    longitude: sighting.longitude,
+    source: sighting.source,
+    source_id: sighting.sourceId || '',
+    details: sighting.details,
+  }));
 }
 
-export async function analyzeTemporal(sightingIds: number[]): Promise<TemporalAnalysis> {
-  const { data } = await client.post('/api/analysis/temporal', { sighting_ids: sightingIds });
-  return data;
+export async function analyzeSighting(id: number): Promise<string> {
+  return unwrap<string>(client.post(`/api/analysis/${id}`, {}));
 }
 
-export async function fetchTerritories(sightingIds: number[]): Promise<Territory[]> {
-  const { data } = await client.post('/api/clustering/territories', { sighting_ids: sightingIds });
-  return data;
-}
-
-export async function exportData(format: 'csv' | 'geojson' | 'kml'): Promise<string> {
-  const { data } = await client.get(`/api/export/${format}`);
-  return typeof data === 'string' ? data : JSON.stringify(data);
-}
-
-export async function importData(file: { uri: string; name: string; type: string }): Promise<{ imported: number }> {
-  const form = new FormData();
-  form.append('file', { uri: file.uri, name: file.name, type: file.type } as any);
-  const { data } = await client.post('/api/import', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return data;
+export async function exportData(format: 'json'): Promise<unknown> {
+  return unwrap<unknown>(client.get(`/api/export/${format}`));
 }

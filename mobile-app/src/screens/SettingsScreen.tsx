@@ -4,35 +4,23 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
-import { exportData, importData } from '../api';
+import { exportData } from '../api';
 
 export default function SettingsScreen() {
   const exportMut = useMutation({
-    mutationFn: async (format: 'csv' | 'geojson' | 'kml') => {
-      const data = await exportData(format);
-      const fileUri = `${FileSystem.cacheDirectory}sightings.${format}`;
-      await FileSystem.writeAsStringAsync(fileUri, data);
+    mutationFn: async () => {
+      const data = await exportData('json');
+      const jsonStr = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      const fileUri = `${FileSystem.cacheDirectory}sightings.json`;
+      await FileSystem.writeAsStringAsync(fileUri, jsonStr);
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri);
       } else {
-        await Share.share({ message: data.slice(0, 1000) });
+        await Share.share({ message: jsonStr.slice(0, 1000) });
       }
     },
     onError: () => Alert.alert('Error', 'Export failed'),
   });
-
-  const handleImport = async () => {
-    try {
-      const result = await importData({
-        uri: 'file:///tmp/import.csv',
-        name: 'import.csv',
-        type: 'text/csv',
-      });
-      Alert.alert('Success', `Imported ${result.imported} records`);
-    } catch {
-      Alert.alert('Error', 'Import failed');
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -40,25 +28,22 @@ export default function SettingsScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Export Data</Text>
-        {(['csv', 'geojson', 'kml'] as const).map((fmt) => (
-          <TouchableOpacity key={fmt} style={styles.row} onPress={() => exportMut.mutate(fmt)}>
-            <Ionicons name="download-outline" size={20} color="#60a5fa" />
-            <Text style={styles.rowText}>Export as {fmt.toUpperCase()}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Import Data</Text>
-        <TouchableOpacity style={styles.row} onPress={handleImport}>
-          <Ionicons name="cloud-upload-outline" size={20} color="#34d399" />
-          <Text style={styles.rowText}>Import CSV/JSON</Text>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => exportMut.mutate()}
+          disabled={exportMut.isPending}
+        >
+          <Ionicons name="download-outline" size={20} color="#60a5fa" />
+          <Text style={styles.rowText}>
+            {exportMut.isPending ? 'Exporting...' : 'Export as JSON'}
+          </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>About</Text>
         <View style={styles.row}>
+          <Ionicons name="information-circle-outline" size={20} color="#94a3b8" />
           <Text style={styles.rowText}>Howler Wolf Tracker v1.0.0</Text>
         </View>
       </View>

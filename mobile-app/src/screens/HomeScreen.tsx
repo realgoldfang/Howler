@@ -1,19 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
-import type { Sighting, FilterParams } from '../types';
+import type { Sighting } from '../types';
 import SightingCard from '../components/SightingCard';
-import FilterBar from '../components/FilterBar';
 import EmptyState from '../components/EmptyState';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConnectionBanner from '../components/ConnectionBanner';
 import { useAutoFetch } from '../hooks/useAutoFetch';
 
 export default function HomeScreen() {
-  const [filters, setFilters] = useState<FilterParams>({});
   const [showBanner, setShowBanner] = useState(false);
   const prevOnlineRef = useRef<boolean | null>(null);
 
-  const { data, isLoading, refetch, isOnline } = useAutoFetch(['sightings', filters]);
+  const { data, isLoading, refetch, isOnline } = useAutoFetch(['sightings']);
 
   useEffect(() => {
     if (prevOnlineRef.current !== null && prevOnlineRef.current !== isOnline) {
@@ -27,7 +25,6 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <ConnectionBanner isOnline={isOnline} showBanner={showBanner} />
-      <FilterBar onChange={setFilters} />
       <FlatList
         data={data || []}
         keyExtractor={(item) => String(item.id || item.sourceId || Math.random())}
