@@ -1,8 +1,9 @@
 /target
-/node_modules
-/howler.db
-/.vscode
+node_modules/
+howler.db
+.vscode/
 *.db
 *.log
 dist/
 .expo/
+package-lock.json
