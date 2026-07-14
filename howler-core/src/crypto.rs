@@ -50,8 +50,7 @@ pub fn load_iucn_token_from_secrets(secrets_path: &Path) -> Result<Option<String
     let content = fs::read_to_string(secrets_path)
         .with_context(|| format!("Failed to read {}", secrets_path.display()))?;
 
-    let secrets: SecretsFile =
-        toml::from_str(&content).context("Failed to parse secrets.toml")?;
+    let secrets: SecretsFile = toml::from_str(&content).context("Failed to parse secrets.toml")?;
 
     if let Some(iucn) = secrets.iucn {
         let token = deobfuscate(&iucn.token)?;
@@ -66,9 +65,7 @@ pub fn save_iucn_token_to_secrets(secrets_path: &Path, token: &str) -> Result<()
     let obfuscated = obfuscate(token);
 
     let secrets = SecretsFile {
-        iucn: Some(IucnSecrets {
-            token: obfuscated,
-        }),
+        iucn: Some(IucnSecrets { token: obfuscated }),
     };
 
     let content = toml::to_string_pretty(&secrets).context("Failed to serialize secrets")?;

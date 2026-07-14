@@ -88,7 +88,13 @@ impl<'a> AuthService<'a> {
         Ok(())
     }
 
-    pub fn register(&self, username: &str, email: &str, password: &str, role: UserRole) -> Result<User> {
+    pub fn register(
+        &self,
+        username: &str,
+        email: &str,
+        password: &str,
+        role: UserRole,
+    ) -> Result<User> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
         let password_hash = argon2
@@ -125,7 +131,8 @@ impl<'a> AuthService<'a> {
     }
 
     pub fn login(&self, username: &str, password: &str) -> Result<Session> {
-        let user = self.get_user_by_username(username)?
+        let user = self
+            .get_user_by_username(username)?
             .ok_or_else(|| anyhow::anyhow!("User not found"))?;
 
         let parsed_hash = PasswordHash::new(&user.password_hash)
@@ -144,10 +151,7 @@ impl<'a> AuthService<'a> {
         let expires_at = Utc::now() + chrono::Duration::hours(24);
 
         self.conn
-            .execute(
-                "DELETE FROM sessions WHERE user_id = ?1",
-                params![user.id],
-            )
+            .execute("DELETE FROM sessions WHERE user_id = ?1", params![user.id])
             .context("Failed to clean old sessions")?;
 
         self.conn
@@ -262,9 +266,9 @@ impl<'a> AuthService<'a> {
     }
 
     pub fn list_users(&self) -> Result<Vec<User>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT id, username, email, password_hash, role, created_at FROM users",
-        )?;
+        let mut stmt = self
+            .conn
+            .prepare("SELECT id, username, email, password_hash, role, created_at FROM users")?;
 
         let users = stmt
             .query_map([], |row| {

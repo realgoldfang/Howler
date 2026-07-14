@@ -29,9 +29,8 @@ async fn handle_socket(socket: WebSocket, broadcast: Broadcast) {
         }
     });
 
-    let mut recv_task = tokio::spawn(async move {
-        while let Some(Ok(_)) = receiver.next().await {}
-    });
+    let mut recv_task =
+        tokio::spawn(async move { while let Some(Ok(_)) = receiver.next().await {} });
 
     tokio::select! {
         _ = &mut send_task => recv_task.abort(),

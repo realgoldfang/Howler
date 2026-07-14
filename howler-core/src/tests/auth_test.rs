@@ -1,5 +1,5 @@
-use crate::auth::{AuthService, UserRole};
 use crate::annotations::{AnnotationStore, AnnotationType};
+use crate::auth::{AuthService, UserRole};
 use chrono::Utc;
 use rusqlite::Connection;
 use tempfile::NamedTempFile;
@@ -43,7 +43,12 @@ fn test_user_registration() {
     auth.init_auth_schema().unwrap();
 
     let user = auth
-        .register("testuser", "test@example.com", "password123", UserRole::Researcher)
+        .register(
+            "testuser",
+            "test@example.com",
+            "password123",
+            UserRole::Researcher,
+        )
         .unwrap();
 
     assert_eq!(user.username, "testuser");
@@ -58,8 +63,13 @@ fn test_user_login_success() {
     let auth = AuthService::new(&conn);
     auth.init_auth_schema().unwrap();
 
-    auth.register("testuser", "test@example.com", "password123", UserRole::Viewer)
-        .unwrap();
+    auth.register(
+        "testuser",
+        "test@example.com",
+        "password123",
+        UserRole::Viewer,
+    )
+    .unwrap();
 
     let session = auth.login("testuser", "password123").unwrap();
     assert!(!session.token.is_empty());
@@ -72,8 +82,13 @@ fn test_user_login_wrong_password() {
     let auth = AuthService::new(&conn);
     auth.init_auth_schema().unwrap();
 
-    auth.register("testuser", "test@example.com", "password123", UserRole::Viewer)
-        .unwrap();
+    auth.register(
+        "testuser",
+        "test@example.com",
+        "password123",
+        UserRole::Viewer,
+    )
+    .unwrap();
 
     let result = auth.login("testuser", "wrongpassword");
     assert!(result.is_err());
@@ -95,8 +110,13 @@ fn test_session_token_validation() {
     let auth = AuthService::new(&conn);
     auth.init_auth_schema().unwrap();
 
-    auth.register("testuser", "test@example.com", "password123", UserRole::Admin)
-        .unwrap();
+    auth.register(
+        "testuser",
+        "test@example.com",
+        "password123",
+        UserRole::Admin,
+    )
+    .unwrap();
 
     let session = auth.login("testuser", "password123").unwrap();
 
@@ -124,7 +144,12 @@ fn test_get_user() {
     auth.init_auth_schema().unwrap();
 
     let user = auth
-        .register("testuser", "test@example.com", "password123", UserRole::Viewer)
+        .register(
+            "testuser",
+            "test@example.com",
+            "password123",
+            UserRole::Viewer,
+        )
         .unwrap();
 
     let fetched = auth.get_user(&user.id).unwrap();
@@ -138,10 +163,20 @@ fn test_duplicate_username() {
     let auth = AuthService::new(&conn);
     auth.init_auth_schema().unwrap();
 
-    auth.register("testuser", "test@example.com", "password123", UserRole::Viewer)
-        .unwrap();
+    auth.register(
+        "testuser",
+        "test@example.com",
+        "password123",
+        UserRole::Viewer,
+    )
+    .unwrap();
 
-    let result = auth.register("testuser", "other@example.com", "password456", UserRole::Viewer);
+    let result = auth.register(
+        "testuser",
+        "other@example.com",
+        "password456",
+        UserRole::Viewer,
+    );
     assert!(result.is_err());
 }
 
@@ -155,11 +190,21 @@ fn test_create_annotation() {
     store.init_annotation_schema().unwrap();
 
     let user = auth
-        .register("testuser", "test@example.com", "password123", UserRole::Researcher)
+        .register(
+            "testuser",
+            "test@example.com",
+            "password123",
+            UserRole::Researcher,
+        )
         .unwrap();
 
     let annotation = store
-        .create_annotation(1, &user.id, "This is a test comment", AnnotationType::Comment)
+        .create_annotation(
+            1,
+            &user.id,
+            "This is a test comment",
+            AnnotationType::Comment,
+        )
         .unwrap();
 
     assert_eq!(annotation.sighting_id, 1);
@@ -178,7 +223,12 @@ fn test_get_annotations_for_sighting() {
     store.init_annotation_schema().unwrap();
 
     let user = auth
-        .register("testuser", "test@example.com", "password123", UserRole::Viewer)
+        .register(
+            "testuser",
+            "test@example.com",
+            "password123",
+            UserRole::Viewer,
+        )
         .unwrap();
 
     store
@@ -208,14 +258,21 @@ fn test_update_annotation() {
     store.init_annotation_schema().unwrap();
 
     let user = auth
-        .register("testuser", "test@example.com", "password123", UserRole::Viewer)
+        .register(
+            "testuser",
+            "test@example.com",
+            "password123",
+            UserRole::Viewer,
+        )
         .unwrap();
 
     let annotation = store
         .create_annotation(1, &user.id, "Original text", AnnotationType::Comment)
         .unwrap();
 
-    store.update_annotation(&annotation.id, "Updated text").unwrap();
+    store
+        .update_annotation(&annotation.id, "Updated text")
+        .unwrap();
 
     let annotations = store.get_annotations_for_sighting(1).unwrap();
     assert_eq!(annotations.len(), 1);
@@ -232,7 +289,12 @@ fn test_delete_annotation() {
     store.init_annotation_schema().unwrap();
 
     let user = auth
-        .register("testuser", "test@example.com", "password123", UserRole::Viewer)
+        .register(
+            "testuser",
+            "test@example.com",
+            "password123",
+            UserRole::Viewer,
+        )
         .unwrap();
 
     let annotation = store
@@ -255,7 +317,12 @@ fn test_add_and_get_rating() {
     store.init_annotation_schema().unwrap();
 
     let user = auth
-        .register("testuser", "test@example.com", "password123", UserRole::Researcher)
+        .register(
+            "testuser",
+            "test@example.com",
+            "password123",
+            UserRole::Researcher,
+        )
         .unwrap();
 
     let rating = store
@@ -306,7 +373,12 @@ fn test_invalid_rating_confidence() {
     store.init_annotation_schema().unwrap();
 
     let user = auth
-        .register("testuser", "test@example.com", "password123", UserRole::Viewer)
+        .register(
+            "testuser",
+            "test@example.com",
+            "password123",
+            UserRole::Viewer,
+        )
         .unwrap();
 
     let result = store.add_rating(1, &user.id, 6, None);
@@ -322,8 +394,13 @@ fn test_logout() {
     let auth = AuthService::new(&conn);
     auth.init_auth_schema().unwrap();
 
-    auth.register("testuser", "test@example.com", "password123", UserRole::Viewer)
-        .unwrap();
+    auth.register(
+        "testuser",
+        "test@example.com",
+        "password123",
+        UserRole::Viewer,
+    )
+    .unwrap();
 
     let session = auth.login("testuser", "password123").unwrap();
     assert!(auth.validate_token(&session.token).unwrap().is_some());

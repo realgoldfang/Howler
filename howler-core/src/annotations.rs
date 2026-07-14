@@ -180,9 +180,10 @@ impl<'a> AnnotationStore<'a> {
     }
 
     pub fn delete_annotation(&self, annotation_id: &str) -> Result<()> {
-        let affected = self
-            .conn
-            .execute("DELETE FROM annotations WHERE id = ?1", params![annotation_id])?;
+        let affected = self.conn.execute(
+            "DELETE FROM annotations WHERE id = ?1",
+            params![annotation_id],
+        )?;
 
         if affected == 0 {
             anyhow::bail!("Annotation not found");

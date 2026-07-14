@@ -138,7 +138,9 @@ async fn create_sighting(
         Ok(id) => {
             let mut saved = sighting.clone();
             saved.id = Some(id);
-            let _ = state.broadcast.publish(StreamingEvent::SightingCreated(saved));
+            let _ = state
+                .broadcast
+                .publish(StreamingEvent::SightingCreated(saved));
             Ok((
                 StatusCode::CREATED,
                 Json(ApiResponse {
@@ -187,7 +189,9 @@ async fn update_sighting(
 
     match state.db.insert_sighting(&sighting) {
         Ok(_inserted_id) => {
-            let _ = state.broadcast.publish(StreamingEvent::SightingUpdated(sighting));
+            let _ = state
+                .broadcast
+                .publish(StreamingEvent::SightingUpdated(sighting));
             Ok(Json(ApiResponse {
                 success: true,
                 data: Some(id),

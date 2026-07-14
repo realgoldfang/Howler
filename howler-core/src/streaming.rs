@@ -25,7 +25,10 @@ impl Broadcast {
         self.sender.subscribe()
     }
 
-    pub fn publish(&self, event: StreamingEvent) -> Result<(), Box<broadcast::error::SendError<StreamingEvent>>> {
+    pub fn publish(
+        &self,
+        event: StreamingEvent,
+    ) -> Result<(), Box<broadcast::error::SendError<StreamingEvent>>> {
         self.sender.send(event).map(|_| ()).map_err(Box::new)
     }
 }
@@ -33,8 +36,8 @@ impl Broadcast {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
     use crate::models::Source;
+    use chrono::Utc;
 
     fn test_sighting() -> Sighting {
         Sighting {

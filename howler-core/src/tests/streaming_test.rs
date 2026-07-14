@@ -87,10 +87,7 @@ async fn test_streaming_broadcast_multiple_subscribers() {
     let r2 = rx2.recv().await.unwrap();
 
     match (&r1, &r2) {
-        (
-            StreamingEvent::SightingUpdated(s1),
-            StreamingEvent::SightingUpdated(s2),
-        ) => {
+        (StreamingEvent::SightingUpdated(s1), StreamingEvent::SightingUpdated(s2)) => {
             assert_eq!(s1.id, s2.id);
             assert_eq!(s1.species, s2.species);
         }

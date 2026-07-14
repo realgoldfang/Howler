@@ -161,9 +161,7 @@ impl Database {
     /// Batch insert sightings for better performance
     pub fn insert_sightings_batch(&self, sightings: &[Sighting]) -> Result<usize> {
         let mut conn = self.conn.lock().unwrap();
-        let tx = conn
-            .transaction()
-            .context("Failed to begin transaction")?;
+        let tx = conn.transaction().context("Failed to begin transaction")?;
 
         let mut count = 0;
         for sighting in sightings {
