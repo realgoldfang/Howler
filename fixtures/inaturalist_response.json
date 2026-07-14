@@ -1,0 +1,39 @@
+{
+  "results": [
+    {
+      "id": 1001,
+      "species_guess": "Canis lupus",
+      "taxon": {
+        "name": "Canis lupus",
+        "preferred_common_name": "Gray Wolf"
+      },
+      "location": "44.5,-110.5",
+      "observed_on": "2023-03-10T08:15:00+00:00",
+      "time_observed_at": "2023-03-10T08:15:00Z",
+      "photos": [
+        {
+          "url": "https://example.com/wolf1.jpg"
+        }
+      ],
+      "place_guess": "Yellowstone National Park"
+    },
+    {
+      "id": 1002,
+      "species_guess": "Canis lupus",
+      "taxon": {
+        "name": "Canis lupus",
+        "preferred_common_name": "Gray Wolf"
+      },
+      "location": "45.2,-112.1",
+      "observed_on": "2023-04-05T16:30:00+00:00",
+      "time_observed_at": "2023-04-05T16:30:00Z",
+      "photos": [
+        {
+          "url": "https://example.com/wolf2.jpg"
+        }
+      ],
+      "place_guess": "Grand Teton National Park"
+    }
+  ],
+  "total_results": 2
+}

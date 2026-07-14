@@ -1,0 +1,25 @@
+{
+  "locations": [
+    {
+      "location_lat": 48.5,
+      "location_long": -113.8,
+      "timestamp": "2023-05-15T12:00:00Z",
+      "individual_id": 5001,
+      "individual_local_identifier": "Wolf_Alpha_001"
+    },
+    {
+      "location_lat": 48.6,
+      "location_long": -113.9,
+      "timestamp": "2023-05-16T13:30:00Z",
+      "individual_id": 5001,
+      "individual_local_identifier": "Wolf_Alpha_001"
+    },
+    {
+      "location_lat": 48.7,
+      "location_long": -114.0,
+      "timestamp": "2023-05-17T14:45:00Z",
+      "individual_id": 5002,
+      "individual_local_identifier": "Wolf_Beta_002"
+    }
+  ]
+}

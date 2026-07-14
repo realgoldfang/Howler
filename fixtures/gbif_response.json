@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "species": "Canis lupus",
+      "scientificName": "Canis lupus",
+      "decimalLatitude": 45.5,
+      "decimalLongitude": -122.5,
+      "eventDate": "2023-01-15T10:30:00Z",
+      "gbifId": 12345,
+      "occurrenceId": "gbif:12345",
+      "verbatimLocality": "Yellowstone National Park"
+    },
+    {
+      "species": "Canis lupus",
+      "scientificName": "Canis lupus",
+      "decimalLatitude": 46.8,
+      "decimalLongitude": -121.7,
+      "eventDate": "2023-02-20T14:45:00Z",
+      "gbifId": 12346,
+      "occurrenceId": "gbif:12346",
+      "verbatimLocality": "Mount Rainier National Park"
+    }
+  ]
+}
