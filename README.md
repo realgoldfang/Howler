@@ -305,6 +305,7 @@ This project is licensed under either of:
 - [x] Machine learning for behavior prediction
 - [x] Web application (React + Vite)
 - [x] Mobile application (React Native / Expo)
-- [ ] Real-time data streaming
-- [ ] Multi-user collaboration features
-- [ ] Offline map tiles for mobile
+- [x] Real-time data streaming (WebSocket + Axum server)
+- [x] Multi-user collaboration (auth, annotations, ratings)
+- [x] Offline map tiles for mobile
+- [x] Auto-fetch on network connectivity
