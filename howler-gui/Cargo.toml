@@ -26,3 +26,4 @@ anyhow = { workspace = true }
 reqwest = { workspace = true }
 image = { version = "0.25", features = ["png", "jpeg"] }
 lru = "0.12"
+dirs = "6"
