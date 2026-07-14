@@ -27,46 +27,130 @@ jobs:
         draft: false
         prerelease: false
 
-  build-and-upload:
-    name: Build and Upload
+  build-linux:
+    name: Linux Packages
     needs: create-release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact_name: howler
-            asset_name: howler-linux-x86_64
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact_name: howler
-            asset_name: howler-macos-x86_64
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact_name: howler.exe
-            asset_name: howler-windows-x86_64.exe
-    
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
         toolchain: stable
         override: true
-        target: ${{ matrix.target }}
-    
-    - name: Build
-      run: cargo build --release --target ${{ matrix.target }}
-    
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
+
+    - name: Install cargo-deb
+      run: cargo install cargo-deb
+
+    - name: Build release
+      run: cargo build --release --all-features --workspace
+
+    - name: Build .deb packages
+      run: |
+        cargo deb --no-build -p howler-cli
+        cargo deb --no-build -p howler-tui
+        cargo deb --no-build -p howler-gui
+
+    - name: Upload deb packages
+      uses: softprops/action-gh-release@v2
+      with:
+        files: target/debian/*.deb
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build .rpm packages
+      run: |
+        cargo deb --no-build -p howler-cli --target rpm
+        cargo deb --no-build -p howler-tui --target rpm
+        cargo deb --no-build -p howler-gui --target rpm
+
+    - name: Upload rpm packages
+      uses: softprops/action-gh-release@v2
       with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-        asset_name: ${{ matrix.asset_name }}
-        asset_content_type: application/octet-stream
+        files: target/debian/*.rpm
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    name: macOS Build
+    needs: create-release
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+
+    - name: Build release
+      run: cargo build --release --all-features -p howler-gui
+
+    - name: Create .app bundle
+      run: |
+        mkdir -p HowlerGui.app/Contents/MacOS
+        mkdir -p HowlerGui.app/Contents/Resources
+        cp target/release/howler-gui HowlerGui.app/Contents/MacOS/
+        cp icons/icon.iconset HowlerGui.app/Contents/Resources/icon.iconset
+        iconutil -c icns icons/icon.iconset -o HowlerGui.app/Contents/Resources/AppIcon.icns
+        cat > HowlerGui.app/Contents/Info.plist << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>howler-gui</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.howler.gui</string>
+            <key>CFBundleName</key>
+            <string>Howler</string>
+            <key>CFBundleVersion</key>
+            <string>0.1.0</string>
+            <key>CFBundleIconFile</key>
+            <string>AppIcon</string>
+        </dict>
+        </plist>
+        EOF
+
+    - name: Create .dmg
+      run: hdiutil create -volname "Howler" -srcfolder HowlerGui.app -ov -format UDZO howler-macos.dmg
+
+    - name: Upload macOS build
+      uses: softprops/action-gh-release@v2
+      with:
+        files: howler-macos.dmg
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows:
+    name: Windows Build
+    needs: create-release
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+
+    - name: Build release
+      run: cargo build --release --all-features -p howler-cli -p howler-tui -p howler-gui
+
+    - name: Create archive
+      run: |
+        Copy-Item icons/icon.ico howler.ico
+        Compress-Archive -Path target/release/howler.exe, target/release/howler-tui.exe, target/release/howler-gui.exe, howler.ico -DestinationPath howler-windows.zip
+
+    - name: Upload Windows build
+      uses: softprops/action-gh-release@v2
+      with:
+        files: howler-windows.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
