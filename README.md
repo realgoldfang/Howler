@@ -299,6 +299,8 @@ This project is licensed under either of:
 
 ## Roadmap
 
+### Completed
+
 - [x] Multi-source data integration (GBIF, iNaturalist, IUCN, Movebank)
 - [x] DBSCAN territory detection
 - [x] Movement and temporal analysis
@@ -311,3 +313,48 @@ This project is licensed under either of:
 - [x] Multi-user collaboration (auth, annotations, ratings)
 - [x] Offline map tiles for mobile
 - [x] Auto-fetch on network connectivity
+
+### Maps
+
+- [ ] Real map tiles for web app (Leaflet / MapLibre)
+- [ ] Map layers (satellite, terrain, topographic)
+- [ ] Territory boundary drawing and editing tools
+- [ ] Heatmap visualization for sighting density
+
+### Data
+
+- [ ] Photo attachments for sightings
+- [ ] Weather data integration (precipitation, temperature at sighting location)
+- [ ] Historical comparison (year-over-year trends)
+- [ ] CSV/GeoJSON/KML export from web and mobile apps
+
+### Machine Learning
+
+- [ ] Species identification from photos
+- [ ] Population density modeling
+- [ ] Migration pattern forecasting
+- [ ] Anomaly detection for unusual sighting patterns
+
+### User Experience
+
+- [ ] Push notifications for new sightings in area
+- [ ] Field data collection mode (offline-first, sync later)
+- [ ] Onboarding tutorial for new users
+- [ ] PDF report export
+- [ ] Dark mode for mobile app
+- [ ] Accessibility improvements (screen reader, contrast)
+
+### Infrastructure
+
+- [ ] Docker setup for easy deployment
+- [ ] Database migrations system
+- [ ] API rate limiting and caching layer
+- [ ] Structured logging and monitoring
+- [ ] Error tracking and reporting
+
+### Social
+
+- [ ] Data sharing between users / public feed
+- [ ] Comments and discussion on sightings
+- [ ] User profiles and contribution tracking
+- [ ] Share sightings to social media
